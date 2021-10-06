@@ -1,11 +1,12 @@
 Package: energytransfer
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Collection of Equations for Modelling Land Atmosphere Interactions 
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Authors@R: person("Alex", "Cebulski", email = "alexcebulski@gmail.com",
+                  role = c("aut", "cre"))
+Description: This package contains multiple functions used in the course CE826 at the University of Saskachewan. Topics include: Land-Surface energy balance, thermodynamics, psychrometrics, solar geometry, shortwave and longwave interactions at the earth surface, turbulent transport, wind flow and momentum transfer, evaporation, transpiration, soil temperature, and heat flux.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Imports:
+    dplyr
