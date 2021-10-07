@@ -266,7 +266,7 @@ density_moist_air_hr <- function(T_c, p_atm, e_sat, W){ # from 2001 ASHRAE Funda
 #' @return Temperature in Celsius
 #' @export
 #'
-#' @examples dew_point_temp(1.286)
+#' @examples dew_point_temp_e_act(1.286)
 dew_point_temp_e_act <- function(e_act, R_v_L_v = 1.844e-4, e_o = 0.6113){ # Stull et al., 2017 eq. 4.15a
   K_dp <- ((1/273.15) - (R_v_L_v) * (log((e_act/e_o))))^-1
 
@@ -411,33 +411,64 @@ wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000){
 
 }
 
-# convert specific humidity to humidity ratio
+#' Conversion: specific humidity (mixing ratio) to humidity ratio
+#'
+#' @param mr mixing ratio aka specific humidity
+#'
+#' @return humidity ratio
+#' @export
+#'
+#' @examples
 mr_sh <- function(mr){x <- mr / (1+mr)}
 
-# Standard temperature at given altitude
-standard_temperature <- function(H) { # Stull et al., 2017 eq. 1.16
-  dplyr::if_else(H <= 11,
+#' Standard Temperature
+#'
+#' Non-linear version, Stull et al., 2017 eq. 1.16
+#'
+#' @param m_asl metres above sea level.
+#'
+#' @return standard temperature (celsius)
+#' @export
+#'
+#' @examples standard_temperature(1000)
+standard_temperature <- function(m_asl) { # Stull et al., 2017 eq. 1.16
+
+  H <- m_asl / 1000
+
+  K <- dplyr::if_else(H <= 11,
           288.15 - (6.5) * H,
 
           dplyr::if_else(H >= 11 & H <= 20,
-                  216.65,
+                216.65,
 
                   dplyr::if_else(H >= 20 & H <= 32,
-                          216.65 + (1) * (H - 20),
+                        16.65 + (1) * (H - 20),
 
                           dplyr::if_else(H >= 32 & H <= 47,
-                                  228.65 + (2.8) * (H - 32),
+                                228.65 + (2.8) * (H - 32),
 
                                   dplyr::if_else(H >= 47 & H <= 51,
-                                          270.65, 0
+                                        270.65, 0
                                   )))))
+
+ return(K - 273.15)
 }
 
-# Pressure for given altitude
-pressure_atmosphere <- function(H){ # Stull et al., 2017 eq. 1.17
-  st <- standard_temperature(H)
+# Pressure at Altitude
+#' Non-uniform equation from Stull et al., 2017 eq. 1.17
+#'
+#' @param m_asl metres above sea level
+#'
+#' @return kpa
+#' @export
+#'
+#' @examples pressure_atmosphere(1000)
+pressure_atmosphere <- function(m_asl){ # Stull et al., 2017 eq. 1.17
+  H <- m_asl / 1000
+
+  st <- standard_temperature(m_asl) + 273.15
   dplyr::if_else(H <= 11,
-          101.325 * (288.15 / st)^5.255877,
+          101.325 * (288.15 / st)^-5.255877,
 
           dplyr::if_else(H >= 11 & H <= 20,
                   (22.632)* exp(-0.1577*(H-11)),
