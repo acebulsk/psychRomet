@@ -1,12 +1,17 @@
-Package: energytransfer
+Package: psychRomet
 Type: Package
-Title: Collection of Equations for Modelling Land Atmosphere Interactions 
+Title: Collection of Equations for Psychrometric Calculations
 Version: 0.1.0
 Authors@R: person("Alex", "Cebulski", email = "alexcebulski@gmail.com",
                   role = c("aut", "cre"))
-Description: This package contains multiple functions used in the course CE826 at the University of Saskachewan. Topics include: Land-Surface energy balance, thermodynamics, psychrometrics, solar geometry, shortwave and longwave interactions at the earth surface, turbulent transport, wind flow and momentum transfer, evaporation, transpiration, soil temperature, and heat flux.
-License: What license is it under?
+Description: This package contains multiple functions used in the course CE826 at the University of Saskachewan. Psychrometrics is concerned with the physical and thermodynamic properties of gas-vapor mixtures.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
     dplyr
+RoxygenNote: 7.1.2
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr

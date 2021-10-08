@@ -1,44 +1,135 @@
 # list of psychometric functions compiled from Stull et al., 2017 and 2001 ASHRAE Fundamentals Handbook (SI)
 
-#### constants ####
-R_d <- 2.871e-4 # kPa·K–1·m3·g–1 aka gas constant for dry air
-R_v <- 4.61e-4 # kPa·K–1·m3·g–1
-
-vap_pressure <- 622 # g kg–1
-
-T_o <- 273.15 # K
-e_o <- 0.6113 # kpa warren uses 610.8 (pa)
-
-P_tot <- 101.325 # pressure at sea level (kpa)
-
 #### functions ####
 
 #' Pressure Uniform
 #' Return air pressure given height above sea level, assumes uniform temp and pressure. From Stull et al., 2017 eq. 1.9b
-#' @param H height in metres
+#' @param m_asl height in metres
 #'
 #' @return pressure in kPa
 #' @export
 #'
-#' @examples
-#' pressure_uniform(10^4)
-pressure_uniform <- function(H){
-  101.325 * exp(1)^{-H/7.29}
+#' @examples pressure_uniform(m_asl = 10^4)
+#'
+pressure_uniform <- function(m_asl){
+  101.325 * exp(1)^{-m_asl/7.29}
 }
 
+#' Actual Vapour Pressure
+#'
+#' Calculated using relative humidity and saturated vapour pressure.
+#' @param e_sat PA or KPA
+#' @param rh as fraction
+#'
+#' @return e_act in units of e_sat
+#' @export
+#'
+#' @examples actual_vapour_pressure(e_sat = 4.360379, rh = 0.35)
+actual_vapour_pressure <- function(e_sat, rh){
+  e_sat * rh
+}
+
+#' Actual Vapour Pressure (using absolute humidity)
+#'
+#' Another way to get actual vapour pressure as a funciton of absolute humidity. From Stull et al., 2017 eq. 1.19.
+#' @param absolute_humidity kg / m3
+#' @param T_c temperature Celsius
+#' @param R_v # kPa·K–1·m3·kg–1
+#'
+#' @return kPa
+#' @export
+#'
+#' @examples actual_vapour_pressure_ah(absolute_humidity = 0.0148, T_c = 20, R_v = 0.4615)
+actual_vapour_pressure_ah <- function(absolute_humidity, T_c, R_v = 0.4615) {
+  K <- T_c + 273.15
+
+  absolute_humidity * R_v * K
+}
+
+#' Absolute Humidity (water vapour density)
+#'
+#' A rearangement of actual_vapour_pressure Stull et al., 2017 eq. 1.19
+#'
+#' @param e_act actual vapour pressure kPa
+#' @param T_c temperature Celsius
+#' @param R_v kPa·K–1·m3·g–1
+#'
+#' @return density of water vapour in the air kg m-3
+#' @export
+#'
+#' @examples absolute_humidity(2, 20)
+absolute_humidity <- function(e_act, T_c, R_v = 0.4615){
+  K <- T_c + 273.15 # Celsius to Kelvin
+  e_act / (R_v * K)
+}
+
+#' Density Dry Air
+#'
+#' Density Dry Air   From Stull et al., 2017 eq. 1.18.
+#'
+#'
+#' @param T_c temperature Celsius
+#' @param p_atm atmosphereic pressure, kPa
+#' @param R_d gas constant for unsaturated air kPa·K–1·m3·g–1
+#'
+#' @return total density of dry air kg / m3
+#' @export
+#'
+#' @examples density_dry_air(15, 101.325)
+density_dry_air <- function(T_c, p_atm, R_d = 0.287053){
+  p_atm / (R_d * (T_c +273.15))
+}
+
+#' Density Moist Air
+#'
+#' Density Dry Air From Stull et al., 2017 eq. 1.19. This one is not recomended in the text because the water vapour constant, is not constant.
+#'
+#'
+#' @param T_c temperature Celsius
+#' @param p_atm atmosphereic pressure, kPa
+#' @param R_v gas constant for moist air kPa·K–1·m3·g–1
+#'
+#' @return total density of moist air g / m3
+#' @export
+#'
+#' @examples density_moist_air(15, 101.325)
+density_moist_air <- function(T_c, p_atm, R_v = 0.4615){
+  p_atm / (R_v * (T_c +273.15))
+}
+
+#' Density Air
+#'
+#' Density  Air using virtual temp, hardly different from above in practice (g / m3). From Stull et al., 2017 eq. 1.23.
+#'
+#'
+#' @param T_c temperature Celsius
+#' @param p_atm atmospheric pressure, kPa
+#' @param mixing_ratio g / m3
+#' @param mixing_ratio_liquid g / m3 usually assume 0
+#' @param mixing_ratio_ice g / m3 usually assume 0
+#' @param R_d gas constant for unsaturated air kPa·K–1·m3·g–1
+#'
+#' @return total density dry + wet kg / m3
+#' @export
+#'
+#' @examples density_dry_air(15, 101.325, 0.03)
+density_air_virtual <- function(T_c, p_atm, mixing_ratio, mixing_ratio_liquid = 0, mixing_ratio_ice = 0, R_d = 0.287053){
+  T_v <- virtual_temp(T_c, mixing_ratio, mixing_ratio_liquid, mixing_ratio_ice)
+  p_atm / (R_d * (T_v +273.15))
+}
 
 #' Saturated Vapour Pressure
 #'
-#' Returns the saturated vapour pressure using the Clausius-Clapeyron equation.
+#' Returns the saturated vapour pressure using the Clausius-Clapeyron equation. From Stull et al., 2017 eq. 4.1
 #'
-#' @param T_c temperature in celcius, function does kelvin conversion
+#' @param T_c temperature in Celsius, function does kelvin conversion
 #' @param e_o vapour pressure constant kpa
 #'
 #' @return e_sat in kPa
 #' @export
 #'
-#' @examples
-clausius_clapeyron <- function(T_c, e_o = 0.6113){ # Stull et al., 2017 eq. 4.1
+#' @examples clausius_clapeyron(T_c = 30, e_o = 0.6113)
+clausius_clapeyron <- function(T_c, e_o = 0.6113){
 
   K <- T_c + 273.15 # Celsius to Kelvin
 
@@ -59,79 +150,31 @@ clausius_clapeyron <- function(T_c, e_o = 0.6113){ # Stull et al., 2017 eq. 4.1
 #' @return e_act in kPa
 #' @export
 #'
-#' @examples
+#' @examples clausius_clapeyron_act(T_c = 30, T_d = 12.8, e_o = 0.6113)
 clausius_clapeyron_act <- function(T_c, T_d, e_o = 0.6113) { # Stull et al., 2017 eq. 4.1b
+  K_d <- T_d + 273.15
   dplyr::if_else(T_c >= 0,
-  e_o * exp((5423) * ((1/273.15) - 1/T_d)), # true
-  e_o * exp((6139) * ((1/273.15) - 1/T_d)) # false
+  e_o * exp((5423) * ((1/273.15) - 1/K_d)), # true
+  e_o * exp((6139) * ((1/273.15) - 1/K_d)) # false
   )
-}
-
-#' Actual Vapour Pressure
-#'
-#' Calculated using relative humidity and saturated vapour pressure.
-#' @param e_sat PA or KPA
-#' @param rh as fraction
-#'
-#' @return e_act in units of e_sat
-#' @export
-#'
-#' @examples
-actual_vapour_pressure <- function(e_sat, rh){
-  e_sat * rh
-}
-
-#' Actual Vapour Pressure (using absolute humidity)
-#'
-#' Another way to get actual vapour pressure as a funciton of absolute humidity. From Stull et al., 2017 eq. 1.19.
-#' @param absolute_humidity fraction
-#' @param T_c temperature celcius
-#' @param R_v # kPa·K–1·m3·g–1
-#'
-#' @return
-#' @export
-#'
-#' @examples
-actual_vapour_pressure_ah <- function(absolute_humidity, T_c, R_v = 4.61e-4) {
-  K <- T_c + 273.15
-  ah <- absolute_humidity * 1000 # kg to g
-  ah * R_v * K
 }
 
 #' Tetens' formula for saturated vapour pressure
 #'
 #' Change e_o to 610.8 for pa. From Stull et al., 2017 eq. 4.2
 #'
-#' @param T_c temperature celcius
+#' @param T_c temperature Celsius
 #' @param e_o vapour pressure constant kpa
 #'
 #' @return kPa or pa if e_o == 610.8 pa
 #' @export
 #'
-#' @examples
+#' @examples tetens(30)
 tetens <- function(T_c, e_o = 0.6113){
   dplyr::if_else(T_c >= 0,
           e_o*exp((17.27*T_c)/(T_c+237.3)), # true
           e_o*exp((21.87*T_c)/(T_c+265.5)) # false
   )
-}
-
-
-#' Absolute Humidity (water vapour density)
-#'
-#' Stull et al., 2017 eq. 1.20
-#'
-#' @param e_s saturated vapour pressure kPa
-#' @param T_c temperature celcius
-#' @param R_v kPa·K–1·m3·g–1
-#'
-#' @return
-#' @export kg m-3
-#'
-#' @examples
-absolute_humidity <- function(e_s, T_c, R_v = 4.61e-4){ # Stull et al., 2017 eq. 1.20
-  K <- T_c + 273.15 # Celsius to Kelvin
-  e_s / (R_v * K)
 }
 
 #' Specific Humidity
@@ -145,8 +188,8 @@ absolute_humidity <- function(e_s, T_c, R_v = 4.61e-4){ # Stull et al., 2017 eq.
 #' @return g kg-1
 #' @export
 #'
-#' @examples
-specific_humidity <- function(e_s, total_pressure, vap_pressure = 622) { #
+#' @examples specific_humidity(e_s = 0.6114, total_pressure = 101.325, vap_pressure = 622)
+specific_humidity <- function(e_s, total_pressure, vap_pressure = 622) {
   (vap_pressure * e_s) / total_pressure
 }
 
@@ -159,7 +202,7 @@ specific_humidity <- function(e_s, total_pressure, vap_pressure = 622) { #
 #' @return fraction
 #' @export
 #'
-#' @examples
+#' @examples relative_humidity(e_act = 1.286, e_s = 2.369)
 relative_humidity <- function(e_act, e_s) { # Stull et al., 2017 eq. 4.14a
   e_act / e_s
 }
@@ -168,14 +211,14 @@ relative_humidity <- function(e_act, e_s) { # Stull et al., 2017 eq. 4.14a
 #'
 #' calculate hr using mostly temp - from psychometrics chapter 6 ASHRAE. Useful for wetbulb iteration calculation.
 #'
-#' @param T_c temperature celcius
+#' @param T_c temperature Celsius
 #' @param T_wb wet bulb temperature
 #' @param W_wb wet bulb humidity ratio
 #'
 #' @return g / kg
 #' @export
 #'
-#' @examples
+#' @examples NA
 humidity_ratio_t <- function(T_c, T_wb, W_wb){
 
   ((2501 - 2.381 * T_wb) * W_wb - 1.006 * (T_c - T_wb)) / (2501 + 1.805 * T_c - 4.18 * T_wb)
@@ -194,65 +237,9 @@ humidity_ratio_t <- function(T_c, T_wb, W_wb){
 #' @return g / kg (saturated or unsaturated depending on e) or g/g if E == 0.622
 #' @export
 #'
-#' @examples
+#' @examples humidity_ratio_p(e_act = 0.6113, p_atm = 101.325)
 humidity_ratio_p <- function(e_act, p_atm, E = 622){
   E * e_act / (p_atm - e_act)
-}
-
-#' Density Moist Air using temperature and atmospheric pressure.
-#'
-#' Stull et al., 2017 eq. 1.20
-#'
-#' @param T_c temperature celcius
-#' @param p_atm kPa
-#' @param R_v kPa·K–1·m3·g–1
-#'
-#' @return g / m3
-#' @export
-#'
-#' @examples
-density_moist_air <- function(T_c, p_atm, R_v = 4.61e-4){
-  p_atm / (R_v * (T_c + 273.15))
-}
-
-#' Density Moist Air
-#'
-#' Density Moist Air using virtual temp, hardly different from above in practice (g / m3). From Stull et al., 2017 eq. 1.23.
-#'
-#' Stull et al., 2017 eq. 1.23
-#'
-#' @param T_c temperature celcius
-#' @param p_atm kPa
-#' @param R_v kPa·K–1·m3·g–1
-#' @param mixing_ratio g / m3
-#' @param mixing_ratio_liquid g / m3 usually assume 0
-#' @param mixing_ratio_ice g / m3 usually assume 0
-#'
-#' @return g / m3
-#' @export
-#'
-#' @examples
-density_moist_air_virtual <- function(T_c, p_atm, R_v = 4.61e-4, mixing_ratio, mixing_ratio_liquid = 0, mixing_ratio_ice = 0){
-  T_v <- virtual_temp(T_c, mixing_ratio, mixing_ratio_liquid, mixing_ratio_ice)
-  p_atm / (R_v * (T_v +273.15))
-}
-
-#' Density Moist Air (water vapour density)
-#'
-#' Density Moist Air using mixing ratio, hardly different from above in practice (g / m3). From 2001 ASHRAE Fundamentals Handbook (SI) eqn 11 + 27 gives g/m3.
-#'
-#'
-#' @param T_c temperature celcius
-#' @param p_atm pressure atmosphere kPa
-#' @param e_sat saturated vapour pressure kPa
-#' @param W mixing ratio g/kg
-#'
-#' @return kg m-3
-#' @export
-#'
-#' @examples
-density_moist_air_hr <- function(T_c, p_atm, e_sat, W){ # from 2001 ASHRAE Fundamentals Handbook (SI) eqn 11 + 27 gives g/m3
-  (1/((R_d * (T_c + 273.15))/ (p_atm - e_sat)))*(1+W)
 }
 
 #' Dew Point Temperature
@@ -279,6 +266,9 @@ dew_point_temp_e_act <- function(e_act, R_v_L_v = 1.844e-4, e_o = 0.6113){ # Stu
 #'
 #' @param mixing_ratio in grams
 #' @param p_atm pressure atmosphere kpa
+#' @param R_v_L_v ratio constant in K
+#' @param e_o ratio R_d to R_v in g per g
+#'
 #'
 #' @return Celsius
 #' @export
@@ -336,7 +326,7 @@ potential_temp <- function(T_c, P){ # Stull et al., 2017 eq. 3.12
 #'
 #' Estimated using an empirical function from Stull et al., 2017 eq. 4.19. Need either RH or esat and eact.
 #'
-#' @param T_c temperature celcius
+#' @param T_c temperature Celsius
 #' @param RH relative humidity fraction
 #' @param e_act kpa or pa
 #' @param e_sat same as above
@@ -418,7 +408,7 @@ wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000){
 #' @return humidity ratio
 #' @export
 #'
-#' @examples
+#' @examples NA
 mr_sh <- function(mr){x <- mr / (1+mr)}
 
 #' Standard Temperature

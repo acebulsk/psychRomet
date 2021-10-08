@@ -1,0 +1,87 @@
+---
+title: "Example of Some Functions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+options(scipen = 0, digits = 2)
+
+```
+
+```{r setup, message=FALSE}
+library(psychRomet)
+library(dplyr)
+library(kableExtra)
+```
+
+### Table 1: Psychrometric properties of saturated air at sea level (101.325 kpa).
+
+```{r}
+p_atm <- 101.325
+rh <- 1.0 # 100% for saturated air
+
+units <- c("$^{\\circ}C$", "$kPa$", "$kPa$", "$g/kg$", "$g/kg$", "$kg/m^3$", "$g/m^3$", "$^{\\circ}C$", "$^{\\circ}C$", "$^{\\circ}C$")
+
+df1 <- data.frame(T_C = seq(from = -40, to = 40, by = 5)) %>%
+  mutate(
+    e_sat = tetens(T_C), # kpa
+    e_act = actual_vapour_pressure(e_sat, rh), # kpa
+    q = specific_humidity(e_sat, p_atm), # g/kg
+    W = humidity_ratio_p(e_sat, p_atm), # aka mixing ratio, g/kg
+    p_air = density_dry_air(T_C, p_atm), # kg / m3
+    # p_air_virtual = density_moist_air_virtual(T_C, p_atm, W) / 1000, # kg / m3 using virtual temperature
+    p_wv = absolute_humidity(e_sat, T_C) * 1000, # aka water vapour density # g / m3
+    T_d = dew_point_temp_e_act(e_act), # Celsius
+    T_w = wet_bulb_empirical(T_c = T_C, e_act = e_act, e_sat = e_sat) # Celsius
+    )
+
+for (i in 1:nrow(df1)) {
+  df1$T_w_iter[i] <- wet_bulb_iter(T_c = df1$T_w[i], rh = rh, p_atm = p_atm) 
+}
+
+colNames <- names(df1)
+
+kbl(df1, col.names = units, escape = F, align = "c", caption = 'Table 1: Output') %>% 
+  add_header_above(header = colNames, line = F, align = "c") %>% 
+  kable_styling()
+```
+
+### Table 2: Psychrometric properties of unsaturated air (RH=35%) at 900 m above sea level.
+
+```{r}
+p_atm <- pressure_uniform(0.9)
+rh <- 0.35 # 35% for saturated air
+
+df2 <- data.frame(T_C = seq(from = -40, to = 40, by = 5)) %>%
+  mutate(
+    e_sat = tetens(T_C), # kpa
+    e_act = actual_vapour_pressure(e_sat, rh), # kpa
+    q = specific_humidity(e_sat, p_atm), # g/kg
+    W = humidity_ratio_p(e_sat, p_atm), # aka mixing ratio, g/kg
+    p_air = density_dry_air(T_C, p_atm), # kg / m3
+    # p_air_virtual = density_moist_air_virtual(T_C, p_atm, W) / 1000, # kg / m3 using virtual temperature
+    p_wv = absolute_humidity(e_sat, T_C) * 1000, # aka water vapour density # g / m3
+    T_d = dew_point_temp_e_act(e_act), # Celsius
+    T_w = wet_bulb_empirical(T_c = T_C, e_act = e_act, e_sat = e_sat) # Celsius
+    )
+
+for (i in 1:nrow(df1)) {
+  df2$T_w_iter[i] <- wet_bulb_iter(T_c = df2$T_w[i], rh = rh, p_atm = p_atm) 
+}
+
+
+colNames <- names(df2)
+
+kbl(df2, col.names = units, escape = F, align = "c", caption = 'Table 2: Output') %>% 
+  add_header_above(header = colNames, line = F, align = "c") %>% 
+  kable_styling()
+```
