@@ -32,7 +32,6 @@ actual_vapour_pressure <- function(e_sat, rh){
 #' Actual Vapour Pressure (using absolute humidity)
 #'
 #' Another way to get actual vapour pressure as a funciton of absolute humidity. From Stull et al., 2017 eq. 1.19.
-#' @param absolute_humidity kg / m3
 #' @param T_c temperature Celsius
 #' @param R_v # kPa·K–1·m3·kg–1
 #'
@@ -40,7 +39,8 @@ actual_vapour_pressure <- function(e_sat, rh){
 #' @export
 #'
 #' @examples actual_vapour_pressure_ah(absolute_humidity = 0.0148, T_c = 20, R_v = 0.4615)
-actual_vapour_pressure_ah <- function(absolute_humidity, T_c, R_v = 0.4615) {
+actual_vapour_pressure_ah <- function(T_c, R_v = 0.4615) {
+  absolute_humidity <- absolute_humidity(T_c)
   K <- T_c + 273.15
 
   absolute_humidity * R_v * K
@@ -50,7 +50,6 @@ actual_vapour_pressure_ah <- function(absolute_humidity, T_c, R_v = 0.4615) {
 #'
 #' A rearangement of actual_vapour_pressure Stull et al., 2017 eq. 1.19
 #'
-#' @param e_act actual vapour pressure kPa
 #' @param T_c temperature Celsius
 #' @param R_v kPa·K–1·m3·g–1
 #'
@@ -58,48 +57,56 @@ actual_vapour_pressure_ah <- function(absolute_humidity, T_c, R_v = 0.4615) {
 #' @export
 #'
 #' @examples absolute_humidity(2, 20)
-absolute_humidity <- function(e_act, T_c, R_v = 0.4615){
+absolute_humidity <- function(T_c, R_v = 0.4615){
+  e_sat <- tetens(T_c) # kpa
+  e_act <- actual_vapour_pressure(e_sat, rh) # kpa
   K <- T_c + 273.15 # Celsius to Kelvin
   e_act / (R_v * K)
 }
 
 #' Density Dry Air
 #'
-#' Density Dry Air   From Stull et al., 2017 eq. 1.18.
-#'
+#' Density Dry Air From Stull et al., 2017 eq. 1.18.
+#' Note: Need to subtract e_act from p_atm so that we are just left with the dry air fraction. From 836 lecture 1 slide 6.
 #'
 #' @param T_c temperature Celsius
+#' @param rh relative humidity as fraction
 #' @param p_atm atmosphereic pressure, kPa
 #' @param R_d gas constant for unsaturated air kPa·K–1·m3·g–1
 #'
-#' @return total density of dry air kg / m3
+#' @return density of dry air kg / m3
 #' @export
 #'
 #' @examples density_dry_air(15, 101.325)
-density_dry_air <- function(T_c, p_atm, R_d = 0.287053){
-  p_atm / (R_d * (T_c +273.15))
+density_dry_air <- function(T_c, rh, p_atm, R_d = 0.287053){
+  e_act <- actual_vapour_pressure(tetens(T_c), rh)
+  (p_atm - e_act) / (R_d * (T_c + 273.15))
 }
 
 #' Density Moist Air
 #'
-#' Density Dry Air From Stull et al., 2017 eq. 1.19. This one is not recomended in the text because the water vapour constant, is not constant.
+#' Since total pressure = pressure dry air + pressure water vapour (from lecture 1 slide 6)
 #'
 #'
 #' @param T_c temperature Celsius
 #' @param p_atm atmosphereic pressure, kPa
 #' @param R_v gas constant for moist air kPa·K–1·m3·g–1
 #'
-#' @return total density of moist air g / m3
+#' @return density of moist air g / m3
 #' @export
 #'
 #' @examples density_moist_air(15, 101.325)
-density_moist_air <- function(T_c, p_atm, R_v = 0.4615){
-  p_atm / (R_v * (T_c +273.15))
+density_moist_air <- function(T_c, rh, p_atm, R_v = 0.4615){
+   rho_da <- density_dry_air(T_c, rh, p_atm)
+
+   rho_wv <- absolute_humidity(T_c) # kg m-3
+
+   rho_da + rho_wv
 }
 
 #' Density Air
 #'
-#' Density  Air using virtual temp, hardly different from above in practice (g / m3). From Stull et al., 2017 eq. 1.23.
+#' Density Air using virtual temp, hardly different from above in practice (g / m3). From Stull et al., 2017 eq. 1.23.
 #'
 #'
 #' @param T_c temperature Celsius
@@ -115,7 +122,7 @@ density_moist_air <- function(T_c, p_atm, R_v = 0.4615){
 #' @examples density_dry_air(15, 101.325, 0.03)
 density_air_virtual <- function(T_c, p_atm, mixing_ratio, mixing_ratio_liquid = 0, mixing_ratio_ice = 0, R_d = 0.287053){
   T_v <- virtual_temp(T_c, mixing_ratio, mixing_ratio_liquid, mixing_ratio_ice)
-  p_atm / (R_d * (T_v +273.15))
+  p_atm / (R_d * (T_v + 273.15))
 }
 
 #' Saturated Vapour Pressure
@@ -154,8 +161,8 @@ clausius_clapeyron <- function(T_c, e_o = 0.6113){
 clausius_clapeyron_act <- function(T_c, T_d, e_o = 0.6113) { # Stull et al., 2017 eq. 4.1b
   K_d <- T_d + 273.15
   dplyr::if_else(T_c >= 0,
-  e_o * exp((5423) * ((1/273.15) - 1/K_d)), # true
-  e_o * exp((6139) * ((1/273.15) - 1/K_d)) # false
+                 e_o * exp((5423) * ((1/273.15) - 1/K_d)), # true
+                 e_o * exp((6139) * ((1/273.15) - 1/K_d)) # false
   )
 }
 
@@ -172,14 +179,14 @@ clausius_clapeyron_act <- function(T_c, T_d, e_o = 0.6113) { # Stull et al., 201
 #' @examples tetens(30)
 tetens <- function(T_c, e_o = 0.6113){
   dplyr::if_else(T_c >= 0,
-          e_o*exp((17.27*T_c)/(T_c+237.3)), # true
-          e_o*exp((21.87*T_c)/(T_c+265.5)) # false
+                 e_o*exp((17.27*T_c)/(T_c+237.3)), # true
+                 e_o*exp((21.87*T_c)/(T_c+265.5)) # false
   )
 }
 
 #' Specific Humidity
 #'
-#' From Stull et al., 2017 eq. 4.7
+#' Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7
 #'
 #' @param e_s saturated vapour pressure kPa
 #' @param total_pressure total pressure kPa
@@ -209,7 +216,7 @@ relative_humidity <- function(e_act, e_s) { # Stull et al., 2017 eq. 4.14a
 
 #' Mixing Ratio (Humidity Ratio)
 #'
-#' calculate hr using mostly temp - from psychometrics chapter 6 ASHRAE. Useful for wetbulb iteration calculation.
+#' Ratio of mass water vapour to the mass of dry air. calculate hr using mostly temp - from psychometrics chapter 6 ASHRAE. Useful for wetbulb iteration calculation.
 #'
 #' @param T_c temperature Celsius
 #' @param T_wb wet bulb temperature
@@ -276,9 +283,9 @@ dew_point_temp_e_act <- function(e_act, R_v_L_v = 1.844e-4, e_o = 0.6113){ # Stu
 #' @examples dew_point_temp_r(0.01, 80)
 dew_point_temp_r <- function(mixing_ratio, p_atm, R_v_L_v = 1.844e-4, e_o = 0.6113){ #
 
- K_dp <- ((1/273.15) - (R_v_L_v) * (log(((mixing_ratio*p_atm)/(e_o * (mixing_ratio+0.622))))))^-1
+  K_dp <- ((1/273.15) - (R_v_L_v) * (log(((mixing_ratio*p_atm)/(e_o * (mixing_ratio+0.622))))))^-1
 
- K_dp - 273.15 # return Celsius
+  K_dp - 273.15 # return Celsius
 }
 
 #' Virtual Temperature
@@ -426,22 +433,22 @@ standard_temperature <- function(m_asl) { # Stull et al., 2017 eq. 1.16
   H <- m_asl / 1000
 
   K <- dplyr::if_else(H <= 11,
-          288.15 - (6.5) * H,
+                      288.15 - (6.5) * H,
 
-          dplyr::if_else(H >= 11 & H <= 20,
-                216.65,
+                      dplyr::if_else(H >= 11 & H <= 20,
+                                     216.65,
 
-                  dplyr::if_else(H >= 20 & H <= 32,
-                        16.65 + (1) * (H - 20),
+                                     dplyr::if_else(H >= 20 & H <= 32,
+                                                    16.65 + (1) * (H - 20),
 
-                          dplyr::if_else(H >= 32 & H <= 47,
-                                228.65 + (2.8) * (H - 32),
+                                                    dplyr::if_else(H >= 32 & H <= 47,
+                                                                   228.65 + (2.8) * (H - 32),
 
-                                  dplyr::if_else(H >= 47 & H <= 51,
-                                        270.65, 0
-                                  )))))
+                                                                   dplyr::if_else(H >= 47 & H <= 51,
+                                                                                  270.65, 0
+                                                                   )))))
 
- return(K - 273.15)
+  return(K - 273.15)
 }
 
 # Pressure at Altitude
@@ -458,19 +465,35 @@ pressure_atmosphere <- function(m_asl){ # Stull et al., 2017 eq. 1.17
 
   st <- standard_temperature(m_asl) + 273.15
   dplyr::if_else(H <= 11,
-          101.325 * (288.15 / st)^-5.255877,
+                 101.325 * (288.15 / st)^-5.255877,
 
-          dplyr::if_else(H >= 11 & H <= 20,
-                  (22.632)* exp(-0.1577*(H-11)),
+                 dplyr::if_else(H >= 11 & H <= 20,
+                                (22.632)* exp(-0.1577*(H-11)),
 
-                  dplyr::if_else(H >= 20 & H <= 32,
-                          (5.4749)*(216.65/st)^34.16319,
+                                dplyr::if_else(H >= 20 & H <= 32,
+                                               (5.4749)*(216.65/st)^34.16319,
 
-                          dplyr::if_else(H >= 32 & H <= 47,
-                                  (0.868)*(228.65/st)^12.2011,
+                                               dplyr::if_else(H >= 32 & H <= 47,
+                                                              (0.868)*(228.65/st)^12.2011,
 
-                                  dplyr::if_else(H >= 47 & H <= 51,
-                                          (0.1109)*exp(-0.1262*(H-47)), 0
-                                  )))))
+                                                              dplyr::if_else(H >= 47 & H <= 51,
+                                                                             (0.1109)*exp(-0.1262*(H-47)), 0
+                                                              )))))
 
+}
+
+#' Air Density at Elevation
+#'
+#' @param T_c Temperature Celsius
+#' @param m_asl Elevation (metres)
+#' @param a 0.040 K m –1
+#' @param p_0 average sea level density 1.2250 kg·m –3
+#'
+#' @return kg / m3
+#' @export
+#'
+#' @examples air_density(15, 2000)
+air_density <- function(T_c, m_asl, a = 0.04, p_0 = 1.2250){
+  k <- T_c + 273.15
+  p_0 * exp(-a * m_asl / k)
 }
