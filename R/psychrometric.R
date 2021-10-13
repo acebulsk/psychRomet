@@ -32,6 +32,7 @@ actual_vapour_pressure <- function(e_sat, rh){
 #' Actual Vapour Pressure (using absolute humidity)
 #'
 #' Another way to get actual vapour pressure as a funciton of absolute humidity. From Stull et al., 2017 eq. 1.19.
+#' @param absolute_humidity g/g
 #' @param T_c temperature Celsius
 #' @param R_v # kPa·K–1·m3·kg–1
 #'
@@ -39,8 +40,7 @@ actual_vapour_pressure <- function(e_sat, rh){
 #' @export
 #'
 #' @examples actual_vapour_pressure_ah(absolute_humidity = 0.0148, T_c = 20, R_v = 0.4615)
-actual_vapour_pressure_ah <- function(T_c, R_v = 0.4615) {
-  absolute_humidity <- absolute_humidity(T_c)
+actual_vapour_pressure_ah <- function(absolute_humidity, T_c,  R_v = 0.4615) {
   K <- T_c + 273.15
 
   absolute_humidity * R_v * K
@@ -57,7 +57,7 @@ actual_vapour_pressure_ah <- function(T_c, R_v = 0.4615) {
 #' @export
 #'
 #' @examples absolute_humidity(2, 20)
-absolute_humidity <- function(T_c, R_v = 0.4615){
+absolute_humidity <- function(T_c, rh, R_v = 0.4615){
   e_sat <- tetens(T_c) # kpa
   e_act <- actual_vapour_pressure(e_sat, rh) # kpa
   K <- T_c + 273.15 # Celsius to Kelvin
@@ -77,7 +77,7 @@ absolute_humidity <- function(T_c, R_v = 0.4615){
 #' @return density of dry air kg / m3
 #' @export
 #'
-#' @examples density_dry_air(15, 101.325)
+#' @examples density_dry_air(15, 0, 101.325)
 density_dry_air <- function(T_c, rh, p_atm, R_d = 0.287053){
   e_act <- actual_vapour_pressure(tetens(T_c), rh)
   (p_atm - e_act) / (R_d * (T_c + 273.15))
@@ -95,11 +95,11 @@ density_dry_air <- function(T_c, rh, p_atm, R_d = 0.287053){
 #' @return density of moist air g / m3
 #' @export
 #'
-#' @examples density_moist_air(15, 101.325)
+#' @examples density_moist_air(15, 0, 101.325)
 density_moist_air <- function(T_c, rh, p_atm, R_v = 0.4615){
    rho_da <- density_dry_air(T_c, rh, p_atm)
 
-   rho_wv <- absolute_humidity(T_c) # kg m-3
+   rho_wv <- absolute_humidity(T_c, rh) # kg m-3
 
    rho_da + rho_wv
 }
@@ -190,14 +190,14 @@ tetens <- function(T_c, e_o = 0.6113){
 #'
 #' @param e_s saturated vapour pressure kPa
 #' @param total_pressure total pressure kPa
-#' @param vap_pressure constant kPa
+#' @param e_o R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5
 #'
-#' @return g kg-1
+#' @return g g-1 change e_o to 622 for g / kg
 #' @export
 #'
-#' @examples specific_humidity(e_s = 0.6114, total_pressure = 101.325, vap_pressure = 622)
-specific_humidity <- function(e_s, total_pressure, vap_pressure = 622) {
-  (vap_pressure * e_s) / total_pressure
+#' @examples specific_humidity(e_s = 0.6114, total_pressure = 101.325, e_o = 0.622)
+specific_humidity <- function(e_s, total_pressure, e_o = 0.622) {
+  (e_o * e_s) / total_pressure
 }
 
 
@@ -226,7 +226,7 @@ relative_humidity <- function(e_act, e_s) { # Stull et al., 2017 eq. 4.14a
 #' @export
 #'
 #' @examples NA
-humidity_ratio_t <- function(T_c, T_wb, W_wb){
+mixing_ratio_t <- function(T_c, T_wb, W_wb){
 
   ((2501 - 2.381 * T_wb) * W_wb - 1.006 * (T_c - T_wb)) / (2501 + 1.805 * T_c - 4.18 * T_wb)
 
@@ -238,15 +238,15 @@ humidity_ratio_t <- function(T_c, T_wb, W_wb){
 #'
 #' @param e_act vapour pressure, can be saturated or unsaturated (kPa)
 #' @param p_atm kPa
-#' @param E R_d over R_v g/kg is default or g/g with 0.622
+#' @param e_o R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5
 #'
 #'
-#' @return g / kg (saturated or unsaturated depending on e) or g/g if E == 0.622
+#' @return  g/g if e_o == 0.622 or g / kg if 622 (saturated or unsaturated depending on e)
 #' @export
 #'
-#' @examples humidity_ratio_p(e_act = 0.6113, p_atm = 101.325)
-humidity_ratio_p <- function(e_act, p_atm, E = 622){
-  E * e_act / (p_atm - e_act)
+#' @examples mixing_ratio_p(e_act = 0.6113, p_atm = 101.325)
+mixing_ratio_p <- function(e_act, p_atm, e_o = 0.622){
+  e_o * e_act / (p_atm - e_act)
 }
 
 #' Dew Point Temperature
@@ -274,16 +274,16 @@ dew_point_temp_e_act <- function(e_act, R_v_L_v = 1.844e-4, e_o = 0.6113){ # Stu
 #' @param mixing_ratio in grams
 #' @param p_atm pressure atmosphere kpa
 #' @param R_v_L_v ratio constant in K
-#' @param e_o ratio R_d to R_v in g per g
+#' @param e_o R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5
 #'
 #'
 #' @return Celsius
 #' @export
 #'
 #' @examples dew_point_temp_r(0.01, 80)
-dew_point_temp_r <- function(mixing_ratio, p_atm, R_v_L_v = 1.844e-4, e_o = 0.6113){ #
+dew_point_temp_r <- function(mixing_ratio, p_atm, R_v_L_v = 1.844e-4, e_o = 0.622){ #
 
-  K_dp <- ((1/273.15) - (R_v_L_v) * (log(((mixing_ratio*p_atm)/(e_o * (mixing_ratio+0.622))))))^-1
+  K_dp <- ((1/273.15) - (R_v_L_v) * (log(((mixing_ratio*p_atm)/(e_o * (mixing_ratio+e_o))))))^-1
 
   K_dp - 273.15 # return Celsius
 }
@@ -366,12 +366,13 @@ wet_bulb_empirical <- function(T_c, RH = NA, e_act = NA, e_sat = NA){ # Stull et
 #' @param rh relative humidity as fraction
 #' @param p_atm pressure atmosphere (PA)
 #' @param iter number of iterations
+#' @param e_o R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5
 #'
 #' @return temperature celsius
 #' @export
 #'
 #' @examples wet_bulb_iter(21, 0.37, 101325)
-wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000){
+wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000, e_o = 0.622){
 
   # define matrices
   residual_mtx <- matrix()
@@ -380,7 +381,7 @@ wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000){
   # calculate baseline humidity ratio we will try to converge on
   e_sat <- tetens(T_c, 610.8)
   e_act <-  e_sat * rh
-  W_base <- humidity_ratio_p(e_act, p_atm, 0.622)
+  W_base <- mixing_ratio_p(e_act, p_atm, e_o)
 
   # Initial value for T_wb
   wet_bulb_trials[1]  <-  T_c
@@ -391,9 +392,9 @@ wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000){
     e_wb <-  tetens(wet_bulb_trials[i], e_o = 610.8)
 
     # convert the sat vapour pressure to humidity ratio
-    W_wb <- humidity_ratio_p(e_wb, p_atm, 0.622)
+    W_wb <- mixing_ratio_p(e_wb, p_atm, e_o)
 
-    W_iter <- humidity_ratio_t(T_c, wet_bulb_trials[i], W_wb)
+    W_iter <- mixing_ratio_t(T_c, wet_bulb_trials[i], W_wb)
 
     # convergence variable
 
@@ -407,16 +408,6 @@ wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000){
   wet_bulb_trials[index] # return wet bulb temp at index with lowest residual
 
 }
-
-#' Conversion: specific humidity (mixing ratio) to humidity ratio
-#'
-#' @param mr mixing ratio aka specific humidity
-#'
-#' @return humidity ratio
-#' @export
-#'
-#' @examples NA
-mr_sh <- function(mr){x <- mr / (1+mr)}
 
 #' Standard Temperature
 #'

@@ -4,11 +4,9 @@
 \alias{absolute_humidity}
 \title{Absolute Humidity (water vapour density)}
 \usage{
-absolute_humidity(e_act, T_c, R_v = 0.4615)
+absolute_humidity(T_c, rh, R_v = 0.4615)
 }
 \arguments{
-\item{e_act}{actual vapour pressure kPa}
-
 \item{T_c}{temperature Celsius}
 
 \item{R_v}{kPa·K–1·m3·g–1}

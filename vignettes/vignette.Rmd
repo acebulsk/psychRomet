@@ -36,10 +36,10 @@ df1 <- data.frame(T_C = seq(from = -40, to = 40, by = 5)) %>%
     e_sat = tetens(T_C), # kpa
     e_act = actual_vapour_pressure(e_sat, rh), # kpa
     q = specific_humidity(e_sat, p_atm), # g/kg
-    W = humidity_ratio_p(e_sat, p_atm), # aka mixing ratio, g/kg
-    p_air = density_dry_air(T_C, p_atm), # kg / m3
+    W = mixing_ratio_p(e_sat, p_atm), # aka mixing ratio, g/kg
+    p_air = density_dry_air(T_C, 1, p_atm), # kg / m3
     # p_air_virtual = density_moist_air_virtual(T_C, p_atm, W) / 1000, # kg / m3 using virtual temperature
-    p_wv = absolute_humidity(e_sat, T_C) * 1000, # aka water vapour density # g / m3
+    p_wv = absolute_humidity(1, T_C) * 1000, # aka water vapour density # g / m3
     T_d = dew_point_temp_e_act(e_act), # Celsius
     T_w = wet_bulb_empirical(T_c = T_C, e_act = e_act, e_sat = e_sat) # Celsius
     )
@@ -66,10 +66,10 @@ df2 <- data.frame(T_C = seq(from = -40, to = 40, by = 5)) %>%
     e_sat = tetens(T_C), # kpa
     e_act = actual_vapour_pressure(e_sat, rh), # kpa
     q = specific_humidity(e_sat, p_atm), # g/kg
-    W = humidity_ratio_p(e_sat, p_atm), # aka mixing ratio, g/kg
-    p_air = density_dry_air(T_C, p_atm), # kg / m3
+    W = mixing_ratio_p(e_sat, p_atm), # aka mixing ratio, g/kg
+        p_air = density_dry_air(T_C, 1, p_atm), # kg / m3
     # p_air_virtual = density_moist_air_virtual(T_C, p_atm, W) / 1000, # kg / m3 using virtual temperature
-    p_wv = absolute_humidity(e_sat, T_C) * 1000, # aka water vapour density # g / m3
+    p_wv = absolute_humidity(1, T_C) * 1000, # aka water vapour density # g / m3
     T_d = dew_point_temp_e_act(e_act), # Celsius
     T_w = wet_bulb_empirical(T_c = T_C, e_act = e_act, e_sat = e_sat) # Celsius
     )

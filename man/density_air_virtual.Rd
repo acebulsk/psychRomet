@@ -30,7 +30,7 @@ density_air_virtual(
 total density dry + wet kg / m3
 }
 \description{
-Density  Air using virtual temp, hardly different from above in practice (g / m3). From Stull et al., 2017 eq. 1.23.
+Density Air using virtual temp, hardly different from above in practice (g / m3). From Stull et al., 2017 eq. 1.23.
 }
 \examples{
 density_dry_air(15, 101.325, 0.03)

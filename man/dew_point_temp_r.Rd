@@ -4,7 +4,7 @@
 \alias{dew_point_temp_r}
 \title{Dew Point Temperature}
 \usage{
-dew_point_temp_r(mixing_ratio, p_atm, R_v_L_v = 0.0001844, e_o = 0.6113)
+dew_point_temp_r(mixing_ratio, p_atm, R_v_L_v = 0.0001844, e_o = 0.622)
 }
 \arguments{
 \item{mixing_ratio}{in grams}
@@ -13,7 +13,7 @@ dew_point_temp_r(mixing_ratio, p_atm, R_v_L_v = 0.0001844, e_o = 0.6113)
 
 \item{R_v_L_v}{ratio constant in K}
 
-\item{e_o}{ratio R_d to R_v in g per g}
+\item{e_o}{R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5}
 }
 \value{
 Celsius

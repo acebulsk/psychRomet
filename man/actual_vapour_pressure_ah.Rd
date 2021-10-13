@@ -7,7 +7,7 @@
 actual_vapour_pressure_ah(absolute_humidity, T_c, R_v = 0.4615)
 }
 \arguments{
-\item{absolute_humidity}{kg / m3}
+\item{absolute_humidity}{g/g}
 
 \item{T_c}{temperature Celsius}
 

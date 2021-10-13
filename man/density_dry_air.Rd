@@ -4,21 +4,24 @@
 \alias{density_dry_air}
 \title{Density Dry Air}
 \usage{
-density_dry_air(T_c, p_atm, R_d = 0.287053)
+density_dry_air(T_c, rh, p_atm, R_d = 0.287053)
 }
 \arguments{
 \item{T_c}{temperature Celsius}
+
+\item{rh}{relative humidity as fraction}
 
 \item{p_atm}{atmosphereic pressure, kPa}
 
 \item{R_d}{gas constant for unsaturated air kPa·K–1·m3·g–1}
 }
 \value{
-total density of dry air kg / m3
+density of dry air kg / m3
 }
 \description{
-Density Dry Air   From Stull et al., 2017 eq. 1.18.
+Density Dry Air From Stull et al., 2017 eq. 1.18.
+Note: Need to subtract e_act from p_atm so that we are just left with the dry air fraction. From 836 lecture 1 slide 6.
 }
 \examples{
-density_dry_air(15, 101.325)
+density_dry_air(15, 0, 101.325)
 }

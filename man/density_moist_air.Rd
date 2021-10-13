@@ -4,7 +4,7 @@
 \alias{density_moist_air}
 \title{Density Moist Air}
 \usage{
-density_moist_air(T_c, p_atm, R_v = 0.4615)
+density_moist_air(T_c, rh, p_atm, R_v = 0.4615)
 }
 \arguments{
 \item{T_c}{temperature Celsius}
@@ -14,11 +14,11 @@ density_moist_air(T_c, p_atm, R_v = 0.4615)
 \item{R_v}{gas constant for moist air kPa·K–1·m3·g–1}
 }
 \value{
-total density of moist air g / m3
+density of moist air g / m3
 }
 \description{
-Density Dry Air From Stull et al., 2017 eq. 1.19. This one is not recomended in the text because the water vapour constant, is not constant.
+Since total pressure = pressure dry air + pressure water vapour (from lecture 1 slide 6)
 }
 \examples{
-density_moist_air(15, 101.325)
+density_moist_air(15, 0, 101.325)
 }

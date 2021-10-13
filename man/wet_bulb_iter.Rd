@@ -4,7 +4,7 @@
 \alias{wet_bulb_iter}
 \title{Wet Bulb Iterator}
 \usage{
-wet_bulb_iter(T_c, rh, p_atm, iter = 3000)
+wet_bulb_iter(T_c, rh, p_atm, iter = 3000, e_o = 0.622)
 }
 \arguments{
 \item{T_c}{air temperature in celsius}
@@ -14,6 +14,8 @@ wet_bulb_iter(T_c, rh, p_atm, iter = 3000)
 \item{p_atm}{pressure atmosphere (PA)}
 
 \item{iter}{number of iterations}
+
+\item{e_o}{R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5}
 }
 \value{
 temperature celsius

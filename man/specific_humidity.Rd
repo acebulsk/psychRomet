@@ -4,21 +4,21 @@
 \alias{specific_humidity}
 \title{Specific Humidity}
 \usage{
-specific_humidity(e_s, total_pressure, vap_pressure = 622)
+specific_humidity(e_s, total_pressure, e_o = 0.622)
 }
 \arguments{
 \item{e_s}{saturated vapour pressure kPa}
 
 \item{total_pressure}{total pressure kPa}
 
-\item{vap_pressure}{constant kPa}
+\item{e_o}{R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5}
 }
 \value{
-g kg-1
+g g-1 change e_o to 622 for g / kg
 }
 \description{
-From Stull et al., 2017 eq. 4.7
+Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7
 }
 \examples{
-specific_humidity(e_s = 0.6114, total_pressure = 101.325, vap_pressure = 622)
+specific_humidity(e_s = 0.6114, total_pressure = 101.325, e_o = 0.622)
 }
