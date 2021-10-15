@@ -12,7 +12,8 @@
 #' @examples pressure_uniform(m_asl = 10^4)
 #'
 pressure_uniform <- function(m_asl){
-  101.325 * exp(1)^{-m_asl/7.29}
+  km <- m_asl / 1000
+  101.325 * exp(1)^{-km/7.29}
 }
 
 #' Actual Vapour Pressure
@@ -32,7 +33,7 @@ actual_vapour_pressure <- function(e_sat, rh){
 #' Actual Vapour Pressure (using absolute humidity)
 #'
 #' Another way to get actual vapour pressure as a funciton of absolute humidity. From Stull et al., 2017 eq. 1.19.
-#' @param absolute_humidity g/g
+#' @param absolute_humidity kg/kg or g/g
 #' @param T_c temperature Celsius
 #' @param R_v # kPa·K–1·m3·kg–1
 #'
@@ -51,7 +52,7 @@ actual_vapour_pressure_ah <- function(absolute_humidity, T_c,  R_v = 0.4615) {
 #' A rearangement of actual_vapour_pressure Stull et al., 2017 eq. 1.19
 #'
 #' @param T_c temperature Celsius
-#' @param R_v kPa·K–1·m3·g–1
+#' @param R_v kPa·K–1·m3·kg–1
 #'
 #' @return density of water vapour in the air kg m-3
 #' @export
@@ -90,9 +91,9 @@ density_dry_air <- function(T_c, rh, p_atm, R_d = 0.287053){
 #'
 #' @param T_c temperature Celsius
 #' @param p_atm atmosphereic pressure, kPa
-#' @param R_v gas constant for moist air kPa·K–1·m3·g–1
+#' @param R_v gas constant for moist air kPa·K–1·m3·kg–1
 #'
-#' @return density of moist air g / m3
+#' @return density of moist air kg / m3
 #' @export
 #'
 #' @examples density_moist_air(15, 0, 101.325)
@@ -111,12 +112,12 @@ density_moist_air <- function(T_c, rh, p_atm, R_v = 0.4615){
 #'
 #' @param T_c temperature Celsius
 #' @param p_atm atmospheric pressure, kPa
-#' @param mixing_ratio g / m3
-#' @param mixing_ratio_liquid g / m3 usually assume 0
-#' @param mixing_ratio_ice g / m3 usually assume 0
-#' @param R_d gas constant for unsaturated air kPa·K–1·m3·g–1
+#' @param mixing_ratio kg / m3
+#' @param mixing_ratio_liquid kg / m3 usually assume 0
+#' @param mixing_ratio_ice kg / m3 usually assume 0
+#' @param R_d gas constant for unsaturated air kPa·K–1·m3·kg–1
 #'
-#' @return total density dry + wet kg / m3
+#' @return total density dry + wet g / m3
 #' @export
 #'
 #' @examples density_dry_air(15, 101.325, 0.03)
