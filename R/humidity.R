@@ -11,7 +11,7 @@
 #'
 #' @examples specific_humidity(e_s = 0.6114, total_pressure = 101.325, e_o = 0.622)
 specific_humidity <- function(e_s, total_pressure, e_o = 0.622) {
-  (e_o * e_s) / total_pressure
+  (e_o * e_s) / (total_pressure - e_s * (1-e_o))
 }
 
 #' Relative Humidity
