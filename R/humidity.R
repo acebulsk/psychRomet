@@ -2,7 +2,7 @@
 #'
 #' Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7
 #'
-#' @param e_s saturated vapour pressure kPa
+#' @param e_a actual vapour pressure kPa
 #' @param total_pressure total pressure kPa
 #' @param e_o R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5
 #'
@@ -10,8 +10,8 @@
 #' @export
 #'
 #' @examples specific_humidity(e_s = 0.6114, total_pressure = 101.325, e_o = 0.622)
-specific_humidity <- function(e_s, total_pressure, e_o = 0.622) {
-  (e_o * e_s) / (total_pressure - e_s * (1-e_o))
+specific_humidity <- function(e_a, total_pressure, e_o = 0.622) {
+  (e_o * e_a) / (total_pressure - e_a * (1-e_o))
 }
 
 #' Relative Humidity
