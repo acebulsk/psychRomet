@@ -45,7 +45,7 @@ df1 <- data.frame(T_C = seq(from = -40, to = 40, by = 5)) %>%
     )
 
 for (i in 1:nrow(df1)) {
-  df1$T_w_iter[i] <- wet_bulb_iter(T_c = df1$T_w[i], rh = rh, p_atm = p_atm) 
+  df1$T_w_iter[i] <- wet_bulb_iter(T_c = df1$T_w[i], rh = rh, p_atm = p_atm * 1000) 
 }
 
 colNames <- names(df1)
@@ -75,7 +75,7 @@ df2 <- data.frame(T_C = seq(from = -40, to = 40, by = 5)) %>%
     )
 
 for (i in 1:nrow(df1)) {
-  df2$T_w_iter[i] <- wet_bulb_iter(T_c = df2$T_w[i], rh = rh, p_atm = p_atm) 
+  df2$T_w_iter[i] <- wet_bulb_iter(T_c = df2$T_w[i], rh = rh, p_atm = p_atm * 1000) 
 }
 
 
