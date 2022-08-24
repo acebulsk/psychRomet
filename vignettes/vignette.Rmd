@@ -56,6 +56,20 @@ system.time(for (i in 1:nrow(df1)) {
                                   iter = 3000) 
 })
 
+vect_wet_bulb <- function(at, rh, p_atm) {
+  wb <- psychRomet::wet_bulb_iter(at, rh, p_atm)
+  
+  return(wb)
+}
+
+system.time(
+dfv <- mapply(vect_wet_bulb, df1$T_c, df1$rh, df1$p_atm)
+)
+
+system.time(
+dfv <- parallel::mcmapply(psychRomet::wet_bulb_iter, df1$T_c, df1$rh, df1$p_atm, mc.cores = 8)
+)
+
 colNames <- names(df1)
 
 kbl(df1, col.names = units, escape = F, align = "c", caption = 'Table 1: Output') %>% 
