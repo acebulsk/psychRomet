@@ -44,9 +44,17 @@ df1 <- data.frame(T_c = seq(from = -40, to = 40, by = 5)) %>%
     # p_air_virtual = density_moist_air_virtual(T_c, p_atm, W) / 1000, # kg / m3 using virtual temperature
     p_wv = absolute_humidity(1, T_c) * 1000, # aka water vapour density # g / m3
     T_d = dew_point_temp_e_act(e_act), # Celsius
-    T_w_iter = pmap_dbl(df1[,1:3], psychRomet::wet_bulb_iter), 
     T_w = wet_bulb_empirical(T_c = T_c, e_act = e_act, e_sat = e_sat) # Celsius
     )
+
+system.time(df1$T_w_iter1 <- pmap_dbl(df1[,1:3], psychRomet::wet_bulb_iter))
+
+system.time(for (i in 1:nrow(df1)) {
+  df1$T_w_iter2[i] <- psychRomet::wet_bulb_iter(T_c = df1$T_c[i], 
+                                  rh = rh, 
+                                  p_atm = p_atm * 1000,
+                                  iter = 3000) 
+})
 
 colNames <- names(df1)
 

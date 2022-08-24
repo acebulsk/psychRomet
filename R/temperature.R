@@ -124,7 +124,7 @@ wet_bulb_empirical <- function(T_c, RH = NA, e_act = NA, e_sat = NA){ # Stull et
 wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000, e_o = 0.622){
 
   # check all required inputs are valid
-  if (!(is.numeric(T_c) & is.numeric(rh) & is.numeric(p_atm))) {
+  if ((is.na(T_c) | is.na(rh) | is.na(p_atm))) {
     return(NA)
   }
   else{
