@@ -123,39 +123,44 @@ wet_bulb_empirical <- function(T_c, RH = NA, e_act = NA, e_sat = NA){ # Stull et
 #' @examples wet_bulb_iter(21, 0.37, 101325)
 wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000, e_o = 0.622){
 
-  # define matrices
-  residual_mtx <- matrix()
-  wet_bulb_trials <- matrix()
-
-  # calculate baseline humidity ratio we will try to converge on
-  e_sat <- tetens(T_c, 610.8)
-  e_act <-  e_sat * rh
-  W_base <- mixing_ratio_p(e_act, p_atm, e_o)
-
-  # Initial value for T_wb
-  wet_bulb_trials[1]  <-  T_c
-
-  for(i in 1:iter){
-
-    # calculate sat vap press at guessed wet bulb temp
-    e_wb <-  tetens(wet_bulb_trials[i], e_o = 610.8)
-
-    # convert the sat vapour pressure to humidity ratio
-    W_wb <- mixing_ratio_p(e_wb, p_atm, e_o)
-
-    W_iter <- mixing_ratio_t(T_c, wet_bulb_trials[i], W_wb)
-
-    # convergence variable
-
-    residual_mtx[i] <- abs(W_base - W_iter)
-
-    wet_bulb_trials[i+1] <- wet_bulb_trials[i] - 0.01 # wet bulb temp is less than equal to dry bulb
+  # check all required inputs are valid
+  if (!(is.numeric(T_c) & is.numeric(rh) & is.numeric(p_atm))) {
+    return(NA)
   }
+  else{
+    # define matrices
+    residual_mtx <- matrix()
+    wet_bulb_trials <- matrix()
 
-  index <- which.min(residual_mtx) # where is the lowest residual
+    # calculate baseline humidity ratio we will try to converge on
+    e_sat <- tetens(T_c, 610.8)
+    e_act <-  e_sat * rh
+    W_base <- mixing_ratio_p(e_act, p_atm, e_o)
 
-  wet_bulb_trials[index] # return wet bulb temp at index with lowest residual
+    # Initial value for T_wb
+    wet_bulb_trials[1]  <-  T_c
 
+    for(i in 1:iter){
+
+      # calculate sat vap press at guessed wet bulb temp
+      e_wb <-  tetens(wet_bulb_trials[i], e_o = 610.8)
+
+      # convert the sat vapour pressure to humidity ratio
+      W_wb <- mixing_ratio_p(e_wb, p_atm, e_o)
+
+      W_iter <- mixing_ratio_t(T_c, wet_bulb_trials[i], W_wb)
+
+      # convergence variable
+
+      residual_mtx[i] <- abs(W_base - W_iter)
+
+      wet_bulb_trials[i+1] <- wet_bulb_trials[i] - 0.01 # wet bulb temp is less than equal to dry bulb
+    }
+
+    index <- which.min(residual_mtx) # where is the lowest residual
+
+    return(wet_bulb_trials[index]) # return wet bulb temp at index with lowest residual
+  }
 }
 
 #' Standard Temperature
