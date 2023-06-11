@@ -10,13 +10,14 @@
 #' @export
 #'
 #' @examples buckfun(0.5, -10)
-buckfun<-function(RH,T_c){
-  RH<-abs(((RH)*0.61121*exp((17.502*T_c)/(240.97 + T_c)))/(-0.61115*exp((22.452*T_c)/(272.55+T_c))))
+buckfun<-function(RH, T_c){
+  RH<-abs((RH*0.61121*exp((17.502*T_c)/(240.97 + T_c)))/(-0.61115*exp((22.452*T_c)/(272.55+T_c))))
+  return(RH)
 }
 
 #' Specific Humidity
 #'
-#' Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7
+#' Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7. To match with the example table 4-1 on pg 90 need to convert to g/kg
 #'
 #' @param e_a actual vapour pressure kPa
 #' @param total_pressure total pressure kPa

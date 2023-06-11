@@ -28,7 +28,7 @@ library(purrr)
 
 ```{r}
 
-units <- c("$^{\\circ}C$", "$\\%$",  "$kPa$", "$kPa$", "$g/kg$", "$g/kg$", "$kg/m^3$", "$g/m^3$", "$g/m^3$", "$^{\\circ}C$", "$^{\\circ}C$", "$^{\\circ}C$")
+units <- c("$^{\\circ}C$", "$\\%$",  "$kPa$", "$kPa$", "$kPa$", "$g/g$", "$g/g$", "$g/m^3$", "$g/m^3$", "$^{\\circ}C$", "$^{\\circ}C$", "$^{\\circ}C$")
 
 df1 <- data.frame(T_c = seq(from = -40, to = 40, by = 5)) %>%
   mutate(
@@ -36,16 +36,15 @@ df1 <- data.frame(T_c = seq(from = -40, to = 40, by = 5)) %>%
     p_atm = 101.325, # kpa,
     e_sat = tetens(T_c), # kpa
     e_act = actual_vapour_pressure(e_sat, rh), # kpa
-    q = specific_humidity(e_sat, p_atm), # g/kg
-    W = mixing_ratio_p(e_sat, p_atm), # aka mixing ratio, g/kg
+    q = specific_humidity(e_sat, p_atm), # g/g
+    W = mixing_ratio_p(e_sat, p_atm), # aka mixing ratio, g/g
     p_air = density_dry_air(T_c, 1, p_atm), # kg / m3
     # p_air_virtual = density_moist_air_virtual(T_c, p_atm, W) / 1000, # kg / m3 using virtual temperature
-    p_wv = absolute_humidity(T_c, rh) * 1000, # aka water vapour density # g / m3
+    p_wv = absolute_humidity(T_c, rh), # aka water vapour density # kg / m3
     T_d = dew_point_temp_e_act(e_act), # Celsius
-    T_w = wet_bulb_empirical(T_c = T_c, e_act = e_act, e_sat = e_sat)
+    T_w = wet_bulb_empirical(T_c = T_c, e_act = e_act, e_sat = e_sat),
+    T_w_iter = ice_bulb_iter(T_c, rh)
     )
-
-df1$T_w_iter <- ice_bulb_iter(df1$T_c, df1$rh)
 
 colNames <- names(df1)
 
@@ -66,16 +65,15 @@ df2 <- data.frame(T_c = seq(from = -40, to = 40, by = 5)) %>%
     p_atm = p_atm,
     e_sat = tetens(T_c), # kpa
     e_act = actual_vapour_pressure(e_sat, rh), # kpa
-    q = specific_humidity(e_sat, p_atm), # g/kg
-    W = mixing_ratio_p(e_sat, p_atm), # aka mixing ratio, g/kg
-        p_air = density_dry_air(T_c, 1, p_atm), # kg / m3
+    q = specific_humidity(e_sat, p_atm),
+    W = mixing_ratio_p(e_sat, p_atm), 
+    p_air = density_dry_air(T_c, 1, p_atm),
     # p_air_virtual = density_moist_air_virtual(T_c, p_atm, W) / 1000, # kg / m3 using virtual temperature
-    p_wv = absolute_humidity(T_c, rh) * 1000, # aka water vapour density # g / m3
-    T_d = dew_point_temp_e_act(e_act), # Celsius
-    T_w = wet_bulb_empirical(T_c = T_c, e_act = e_act, e_sat = e_sat) # Celsius
+    p_wv = absolute_humidity(T_c, rh),
+    T_d = dew_point_temp_e_act(e_act), 
+    T_w = wet_bulb_empirical(T_c = T_c, e_act = e_act, e_sat = e_sat),
+    T_w_iter = ice_bulb_iter(T_c, rh)
     )
-
-df2$T_w_iter <- ice_bulb_iter(df2$T_c, df2$rh)
 
 colNames <- names(df2)
 
