@@ -93,7 +93,8 @@ potential_temp <- function(T_c, P){ # Stull et al., 2017 eq. 3.12
 #' @examples wet_bulb_empirical(20, .5)
 wet_bulb_empirical <- function(T_c, RH = NA, e_act = NA, e_sat = NA){ # Stull et al., 2017 eq. 4.19
 
-  if (is.na(RH)){
+  if(all(is.na(RH))){
+    stopifnot(!all(is.na(e_act)) & !all(is.na(e_act)))
     RH <- relative_humidity(e_act, e_sat) * 100
     T_c * atan(0.151977 * (RH + 8.313659)^0.5) - 4.686035 +
       atan(T_c + RH) - atan(RH - 1.676331) +
@@ -107,61 +108,109 @@ wet_bulb_empirical <- function(T_c, RH = NA, e_act = NA, e_sat = NA){ # Stull et
   }
 }
 
-#' Wet Bulb Iterator
+#' ## @TODO SOMETHING WRONG HERE
+#' #' Wet Bulb Iterator
+#' #'
+#' #' Uses a convergence variable to find the wet bulb temp by solving for. Warren ran through this in class.
+#' #'
+#' #' @param T_c air temperature in celsius
+#' #' @param rh relative humidity as fraction
+#' #' @param p_atm pressure atmosphere (PA)
+#' #' @param iter number of iterations
+#' #' @param e_o R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5
+#' #'
+#' #' @return temperature celsius
+#' #' @export
+#' #'
+#' #' @examples wet_bulb_iter(21, 0.37, 101325)
+#' wet_bulb_iter <- function(T_c, rh){
 #'
-#' Uses a convergence variable to find the wet bulb temp by solving for. Warren ran through this in class.
+#'   T_K <- T_c + 273.15 # deg kelvin
+#'   D <- 2.06e-5 * (T_K / 273.15) ^ 1.75 # diffusivity of water vapour in air (m2 s-1)
+#'   lamb <- 0.000063 * T_K + 0.00673 # thermal conductivity of air (J m-1 s-1 K-1)
+#'   L_v <- 1000 * (2501 - (2.361 * T_c)) # latent heat of vaporisation (J kg-1)
+#'   L_s <- 1000 * (2834.1 - 0.29 * T_c - 0.004 * T_c ^ 2) # latent heat of sublimation  (J kg-1)
+#'   rho_ta <- absolute_humidity(T_c = T_c, rh = rh) # water vapour density in the free atmosphere (kg m-3)
+#'   rho_sat_ti <- absolute_humidity(T_c = T_c, rh = 1) # saturated water vapour density (kg m-3)
 #'
-#' @param T_c air temperature in celsius
-#' @param rh relative humidity as fraction
-#' @param p_atm pressure atmosphere (PA)
-#' @param iter number of iterations
-#' @param e_o R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5
+#'   iter <- 0
+#'   flag <- 0
+#'   T_iter <- T_c
 #'
-#' @return temperature celsius
-#' @export
+#'   df <- data.frame(T_i = NA)
 #'
-#' @examples wet_bulb_iter(21, 0.37, 101325)
-wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000, e_o = 0.622){
-
-  # check all required inputs are valid
-  if ((is.na(T_c) | is.na(rh) | is.na(p_atm))) {
-    return(NA)
-  }
-  else{
-    # define matrices
-    residual_mtx <- matrix()
-    wet_bulb_trials <- matrix()
-
-    # calculate baseline humidity ratio we will try to converge on
-    e_sat <- tetens(T_c, 610.8)
-    e_act <-  e_sat * rh
-    W_base <- mixing_ratio_p(e_act, p_atm, e_o)
-
-    # Initial value for T_wb
-    wet_bulb_trials[1]  <-  T_c
-
-    for(i in 1:iter){
-
-      # calculate sat vap press at guessed wet bulb temp
-      e_wb <-  tetens(wet_bulb_trials[i], e_o = 610.8)
-
-      # convert the sat vapour pressure to humidity ratio
-      W_wb <- mixing_ratio_p(e_wb, p_atm, e_o)
-
-      W_iter <- mixing_ratio_t(T_c, wet_bulb_trials[i], W_wb)
-
-      # convergence variable
-
-      residual_mtx[i] <- abs(W_base - W_iter)
-
-      wet_bulb_trials[i+1] <- wet_bulb_trials[i] - 0.01 # wet bulb temp is less than equal to dry bulb
-    }
-
-    index <- which.min(residual_mtx) # where is the lowest residual
-
-    return(wet_bulb_trials[index]) # return wet bulb temp at index with lowest residual
-  }
-}
+#'   while (flag == 0) {
+#'     rho_sat_ti <- absolute_humidity(T_c = T_iter, rh = 1)
+#'     if(T_iter < 0){
+#'       L <- L_s
+#'     } else {
+#'       L <- L_v
+#'     }
+#'     T_prev <- T_iter
+#'     df[iter+1] <- T_iter
+#'     T_iter <- T_c + (D / lamb) * L * (rho_ta - rho_sat_ti)
+#'     if(abs((T_iter - T_prev)/ T_prev) < 0.01 | iter > 100){
+#'       flag <- 1
+#'       T_i <- T_iter
+#'     }
+#'     iter <- iter + 1
+#'   }
+#' }
+#' #' Wet Bulb Iterator
+#' #'
+#' #' Uses a convergence variable to find the wet bulb temp by solving for. Warren ran through this in class.
+#' #'
+#' #' @param T_c air temperature in celsius
+#' #' @param rh relative humidity as fraction
+#' #' @param p_atm pressure atmosphere (PA)
+#' #' @param iter number of iterations
+#' #' @param e_o R_d over R_v (g/g) Vapour pressure constant Stull et al., eq 4.5
+#' #'
+#' #' @return temperature celsius
+#' #' @export
+#' #'
+#' #' @examples wet_bulb_iter(21, 0.37, 101325)
+#' wet_bulb_iter <- function(T_c, rh, p_atm, iter = 3000, e_o = 0.622){
+#'
+#'   # check all required inputs are valid
+#'   if ((is.na(T_c) | is.na(rh) | is.na(p_atm))) {
+#'     return(NA)
+#'   }
+#'   else{
+#'     # define matrices
+#'     residual_mtx <- matrix()
+#'     wet_bulb_trials <- matrix()
+#'
+#'     # calculate baseline humidity ratio we will try to converge on
+#'     e_sat <- tetens(T_c, 610.8)
+#'     e_act <-  e_sat * rh
+#'     W_base <- mixing_ratio_p(e_act, p_atm, e_o)
+#'
+#'     # Initial value for T_wb
+#'     wet_bulb_trials[1]  <-  T_c
+#'
+#'     for(i in 1:iter){
+#'
+#'       # calculate sat vap press at guessed wet bulb temp
+#'       e_wb <-  tetens(wet_bulb_trials[i], e_o = 610.8)
+#'
+#'       # convert the sat vapour pressure to humidity ratio
+#'       W_wb <- mixing_ratio_p(e_wb, p_atm, e_o)
+#'
+#'       W_iter <- mixing_ratio_t(T_c, wet_bulb_trials[i], W_wb)
+#'
+#'       # convergence variable
+#'
+#'       residual_mtx[i] <- abs(W_base - W_iter)
+#'
+#'       wet_bulb_trials[i+1] <- wet_bulb_trials[i] - 0.01 # wet bulb temp is less than equal to dry bulb
+#'     }
+#'
+#'     index <- which.min(residual_mtx) # where is the lowest residual
+#'
+#'     return(wet_bulb_trials[index]) # return wet bulb temp at index with lowest residual
+#'   }
+#' }
 
 #' Standard Temperature
 #'
