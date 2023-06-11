@@ -1,14 +1,45 @@
+
+#' Thermal conductivity of air
+#'
+#' Helper function for the ice bulb temp calculation that calculates the thermal conductivity of air [J m-1 s-1 K-1]
+#'
+#' @param Tai
+#'
+#' @return thermal conductivity of air [J m-1 s-1 K-1]
+#' @export
+#'
+#' @examples thermal_conductivity_air(10)
+thermal_conductivity_air <-function(Tai){
+  Ka<-0.000063*(Tai+273.15)+0.00673
+}
+
+#' Diffusivity of water vapour in air
+#'
+#' Helper function for ice bulb temp calculation calculates the diffusivity of water vapour in air.
+#'
+#' @param T_c air temperature in celcius
+#'
+#' @return diffusivity of water vapour in air [m2 s-1]
+#' @export
+#'
+#' @examples diffusivity_water_vapour(10)
+diffusivity_water_vapour <-function(T_c){
+  Dv<-2.06*10^-5*((T_c+273.15)/273.15)^1.75
+  return(Dv)
+}
+
 #' Absolute Humidity (water vapour density)
 #'
 #' A rearangement of actual_vapour_pressure Stull et al., 2017 eq. 1.19
 #'
 #' @param T_c temperature Celsius
+#' @param rh as fraction
 #' @param R_v kPa·K–1·m3·kg–1
 #'
 #' @return density of water vapour in the air kg m-3
 #' @export
 #'
-#' @examples absolute_humidity(2, 20)
+#' @examples absolute_humidity(2, .20)
 absolute_humidity <- function(T_c, rh, R_v = 0.4615){
   e_sat <- tetens(T_c) # kpa
   e_act <- actual_vapour_pressure(e_sat, rh) # kpa

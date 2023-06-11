@@ -1,3 +1,19 @@
+
+#' Correction of RH when Air Temp < 0 C
+#'
+#' This is the code used in Harder 2016 for phase correction, also see CRHMr buck function. Reference for this function is Buck 1981
+#'
+#' @param RH relative humidity (frac or percentage)
+#' @param T_c air temperature deg C
+#'
+#' @return adjusted relative humidity value corrected when below deg. C
+#' @export
+#'
+#' @examples buckfun(0.5, -10)
+buckfun<-function(RH,T_c){
+  RH<-abs(((RH)*0.61121*exp((17.502*T_c)/(240.97 + T_c)))/(-0.61115*exp((22.452*T_c)/(272.55+T_c))))
+}
+
 #' Specific Humidity
 #'
 #' Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7
@@ -9,7 +25,7 @@
 #' @return g g-1 change e_o to 622 for g / kg
 #' @export
 #'
-#' @examples specific_humidity(e_s = 0.6114, total_pressure = 101.325, e_o = 0.622)
+#' @examples specific_humidity(e_a = 0.6114, total_pressure = 101.325, e_o = 0.622)
 specific_humidity <- function(e_a, total_pressure, e_o = 0.622) {
   (e_o * e_a) / (total_pressure - e_a * (1-e_o))
 }

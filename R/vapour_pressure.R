@@ -4,8 +4,8 @@
 #'
 #' @param T_c temperature Celsius
 #' @param e_o vapour pressure constant kpa
-#' @param b1
-#' @param b2
+#' @param b1 empirical parameter
+#' @param b2 empirical parameter
 #'
 #' @return kPa or pa if e_o == 610.8 pa
 #' @export

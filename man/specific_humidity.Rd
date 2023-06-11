@@ -4,10 +4,10 @@
 \alias{specific_humidity}
 \title{Specific Humidity}
 \usage{
-specific_humidity(e_s, total_pressure, e_o = 0.622)
+specific_humidity(e_a, total_pressure, e_o = 0.622)
 }
 \arguments{
-\item{e_s}{saturated vapour pressure kPa}
+\item{e_a}{actual vapour pressure kPa}
 
 \item{total_pressure}{total pressure kPa}
 
@@ -20,5 +20,5 @@ g g-1 change e_o to 622 for g / kg
 Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7
 }
 \examples{
-specific_humidity(e_s = 0.6114, total_pressure = 101.325, e_o = 0.622)
+specific_humidity(e_a = 0.6114, total_pressure = 101.325, e_o = 0.622)
 }

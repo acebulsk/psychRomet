@@ -11,7 +11,9 @@ tetens(T_c, e_o = 0.6113, b1 = 17.27, b2 = 21.87)
 
 \item{e_o}{vapour pressure constant kpa}
 
-\item{b2}{}
+\item{b1}{empirical parameter}
+
+\item{b2}{empirical parameter}
 }
 \value{
 kPa or pa if e_o == 610.8 pa
