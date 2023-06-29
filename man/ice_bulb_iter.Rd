@@ -7,9 +7,9 @@
 ice_bulb_iter(Ta, RH)
 }
 \arguments{
-\item{Ta}{air temperature in deg C}
+\item{Ta}{air temperature in deg C, can be vector or single value}
 
-\item{RH}{relative humidity as a fraction}
+\item{RH}{relative humidity as a fraction, can be vector or single value}
 }
 \value{
 a vector of ice bulb temperatures in deg C

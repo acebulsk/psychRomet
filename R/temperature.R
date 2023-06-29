@@ -113,8 +113,8 @@ wet_bulb_empirical <- function(T_c, RH = NA, e_act = NA, e_sat = NA){ # Stull et
 #' Uses the Newton-Raphston Iteration Functions to converge on an ice bulb temperature. This code was sent from Phil Harder within his phase correction script.
 #'
 #'
-#' @param Ta air temperature in deg C
-#' @param RH relative humidity as a fraction
+#' @param Ta air temperature in deg C, can be vector or single value
+#' @param RH relative humidity as a fraction, can be vector or single value
 #'
 #' @author Phillip Harder
 #'
@@ -149,17 +149,21 @@ ice_bulb_iter <- function(Ta, RH){
 
   #Ti Iterative Solution
   for(i in 1:length(Ta)){
-    Tai <- Ta[i]
-    RHi <- RH[i]
-    Li <- L[i]
-    Ti1 <- Tai-5.0001 #Initial guess of Ti
-    crit <- 99999 #Initial critical value for while loop
-    while(crit>0.000001){
-      Ti2 <- Tifun(Ti1)
-      crit <- abs(Ti1-Ti2)
-      Ti1 <- Ti2
+    if (is.na(Ta[i]) | is.na(RH[i])) {
+      Ti[i] <- NA
+    } else {
+      Tai <- Ta[i]
+      RHi <- RH[i]
+      Li <- L[i]
+      Ti1 <- Tai-5.0001 #Initial guess of Ti
+      crit <- 99999 #Initial critical value for while loop
+      while(crit>0.000001){
+        Ti2 <- Tifun(Ti1)
+        crit <- abs(Ti1-Ti2)
+        Ti1 <- Ti2
+      }
+      Ti[i] <- Ti1
     }
-    Ti[i] <- Ti1
   }
   return(Ti[,1])
 }

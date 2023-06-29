@@ -17,7 +17,7 @@ specific_humidity(e_a, total_pressure, e_o = 0.622)
 g g-1 change e_o to 622 for g / kg
 }
 \description{
-Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7
+Ratio of mass of water vapour to total air pressure. From Stull et al., 2017 eq. 4.7. To match with the example table 4-1 on pg 90 need to convert to g/kg
 }
 \examples{
 specific_humidity(e_a = 0.6114, total_pressure = 101.325, e_o = 0.622)
