@@ -1,0 +1,147 @@
+library(gdata)
+#need dataset of date, T, RH, u and precip
+
+# needed for Ti methods
+###############################################
+#Hydrometeor Temperature (Ti) Iterative Solution
+#R Code
+#October 17, 2013
+#Phillip Harder
+###############################################
+
+#######Input########
+#Ta<- Air Temperature [C]
+#RH<- Relative Humidity wrt to water [%]
+#u<- windspeed [m s-1]
+#P<-raw precipitation [mm]
+#step <- data time step switch:
+  #15 min = 1
+   #Hourly = 2
+ #Daily = 3
+#shield <- wind undercatch correction switch:
+  #alter/Geonor = 1, MacDonald Pomeroy 2007
+#Smith = 2,
+   #none = 0
+#output <- variable to output
+  #total_precip = 1
+  #rain = 2
+  #snow = 3
+  #ratio = 4
+
+Ta <- 30
+RH <- .2
+phase_correct<-function(Ta,RH,u,P,step,shield,output){
+#trim to intervals with Precip
+  end<-length(P)
+  k<-which(P>0)
+  Ta<-Ta[k]
+  RH<-RH[k]
+  u<-u[k]
+  P<-P[k]
+#Constants
+mw<- 18.01528 #Molar mass of water [gmol-1]
+Ru<-0.00831441 #Universal gas constant [m3kPag-1mol-1K-1]
+#Corrections with respect to Ta
+#Latent Heat [J kg-1]
+  L<-1000*(2501-(2.361*Ta))
+  L[which(Ta<0)]<-1000*(2834.1-0.29*Ta[which(Ta<0)]-0.004*Ta[which(Ta<0)]^2)
+#Buck (1981) correction for saturation wrt to ice when Ta < 0 C
+  buckfun<-function(RH,Ta){
+    RH<-abs(100*((RH/100)*0.61121*exp((17.502*Ta)/(240.97 + Ta)))/(-0.61115*exp((22.452*Ta)/(272.55+Ta))))
+  }
+  RH[which(Ta<0)]<-buckfun(RH[which(Ta<0)], Ta[which(Ta<0)])
+#Functions
+#water vapour density (ASHRAE,1993)[gm-3]
+phivfun<-function(mw,RHi,Tai,Ru){
+  phiv<-mw*(RHi/100*0.611*exp((17.3*Tai)/(237.3+Tai)))/(Ru*(Tai+273.15))/1000
+}
+#saturated water vapour density (ASHRAE,1993)[gm-3]
+phivtfun<-function(mw,Tai,Ru){
+  phivt<-mw*(0.611*exp((17.3*Tai)/(237.3+Tai)))/(Ru*(Tai+273.15))/1000
+}
+#Diffusivity of water vapour in air [m2 s-1]
+Dvfun<-function(Tai){
+  Dv<-2.06*10^-5*((Tai+273.15)/273.15)^1.75
+}
+#Thermal conductivity of air [J m-1 s-1 K-1]
+Kafun<-function(Tai){
+  Ka<-0.000063*(Tai+273.15)+0.00673
+}
+#Newton-Raphston Iteration Functions
+ffun<-function(Tai,Ti1){
+  ff<--Ti1+Tai-(Li*Dvfun(Tai)/Kafun(Tai))*(phivtfun(mw,Ti1,Ru)-phivfun(mw,RHi,Tai,Ru))
+}
+fpfun<-function(Tai,Ti1){
+  T1<-Ti1+0.001*Ti1
+  T2<-Ti1-0.001*Ti1
+  fp<-(ffun(Tai,T1)-ffun(Tai,T2))/(0.002*Ti1)
+}
+Tifun<-function(Ti1){
+  Ti2<-Ti1-ffun(Tai,Ti1)/fpfun(Tai,Ti1)
+}
+Ti<-matrix(ncol=1,nrow=length(Ta),NA)
+#Ti Iterative Solution
+for(i in 1:length(Ta)){
+    Tai<-Ta[i]
+    RHi<-RH[i]
+    Li<-L[i]
+  Ti1<-Tai-5.0001 #Initial guess of Ti
+crit<-99999 #Initial critical value for while loop
+while(crit>0.000001){
+  Ti2<-Tifun(Ti1)
+  crit<-abs(Ti1-Ti2)
+  Ti1<-Ti2
+}
+Ti[i]<-Ti1
+}
+#Timestep switch
+b_ini<-c(2.630006,2.50286,2.799856)
+c_ini<-c(0.09336,0.125006,0.293292)
+b<-b_ini[step]
+c<-c_ini[step]
+ratio_rain<-round(1/(1+b*c^Ti),3)
+ratio_rain[which(ratio_rain>=0.5)]<-1
+ratio_rain[which(ratio_rain<0.5)]<-0
+Rain<-ratio_rain*P
+#Shield-undercatch switch
+if(shield==1){
+Snow<-abs(ratio_rain-1)*P/(1.01*exp(-0.09*u))
+} else if(shield==2){
+  Snow<-abs(ratio_rain-1)*P/(1.18*exp(-0.18*u))
+} else if(shield==3){
+    u[which(u>7.2)]<-7.2
+  CE<-exp(-0.04801*u*(1-atan(1.955*Ta)+0.8036))
+  CE[which(Ta>5)]<-1
+Snow<-((1-ratio_rain)*P)/CE
+}else if(shield==0){
+  Snow<-abs(ratio_rain-1)*P
+}
+total_precip<-Rain+Snow
+#Output Switch
+if(output==1){
+  P<-total_precip
+} else if(output==2){
+  P<-Rain
+} else if(output==3){
+  P<-Snow
+} else if(output==4){
+  P<-ratio_rain
+}
+out<-matrix(ncol=1,nrow=end,0)
+out[k]<-P
+out
+}
+
+#Test data
+Ta<-seq(-10,10,0.1)
+RH<-rep(90,201)
+u<-rep(10,201)
+P<-rep(1,201)
+step<-2
+shield<-3
+output<-3
+
+correction<-phase_correct(Ta,RH,u,P,step,shield,output)
+plot(Ta,correction)
+
+

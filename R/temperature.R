@@ -124,9 +124,25 @@ wet_bulb_empirical <- function(T_c, RH = NA, e_act = NA, e_sat = NA){ # Stull et
 #' @examples ice_bulb_iter(-10, 0.5)
 ice_bulb_iter <- function(Ta, RH){
 
+  RH <- RH*100
+
+  mw<- 18.01528 #Molar mass of water [gmol-1]
+  Ru<-0.00831441 #Universal gas constant [m3kPag-1mol-1K-1]
+
+  #water vapour density (ASHRAE,1993)[gm-3]
+  phivfun<-function(mw,RHi,Tai,Ru){
+    mw*(RHi/100*0.611*exp((17.3*Tai)/(237.3+Tai)))/(Ru*(Tai+273.15))/1000
+  }
+  #saturated water vapour density (ASHRAE,1993)[gm-3]
+  phivtfun<-function(mw,Tai,Ru){
+    mw*(0.611*exp((17.3*Tai)/(237.3+Tai)))/(Ru*(Tai+273.15))/1000
+  }
+
   # Newton-Raphston Iteration Functions
   ffun<-function(Tai,Ti1){
-    ff <- -Ti1+Tai-(Li*diffusivity_water_vapour(Tai)/thermal_conductivity_air(Tai))*(absolute_humidity(T_c = Tai, rh = 1)-absolute_humidity(T_c = Tai, rh = RHi))
+    ff <- -Ti1+Tai-(Li*diffusivity_water_vapour(Tai)/
+                      thermal_conductivity_air(Tai))*
+      (phivtfun(mw, Ti1, Ru) - phivfun(mw, RHi, Tai, Ru))
   }
 
   fpfun<-function(Tai,Ti1){

@@ -81,3 +81,30 @@ kbl(df2, col.names = units, escape = F, align = "c", caption = 'Table 2: Output'
   add_header_above(header = colNames, line = F, align = "c") %>% 
   kable_styling()
 ```
+
+### Wet Bulb Comparison 
+
+```{r}
+library(tidyr)
+library(ggplot2)
+
+met <- data.frame(
+  Tdb = rep(seq(-40, 40, 0.5), 9),
+  RH = rep(seq(20, 100, by = 10), each = 161)/100
+) |> 
+  mutate(Twb_iter = ice_bulb_iter(Tdb, RH),
+         Twb_empir = wet_bulb_empirical(Tdb, RH))
+
+met |> 
+  pivot_longer(Twb_iter:Twb_empir) |> 
+  ggplot(aes(Tdb, value, colour = RH, group = RH)) + 
+  geom_line() +
+  facet_wrap(~name)
+
+met |> 
+  pivot_longer(Twb_iter:Twb_empir) |> 
+  ggplot(aes(Tdb, value, colour = name, group = name)) + 
+  geom_line() +
+  facet_wrap(~RH)
+```
+

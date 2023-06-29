@@ -10,7 +10,7 @@
 #'
 #' @examples thermal_conductivity_air(10)
 thermal_conductivity_air <-function(Tai){
-  Ka<-0.000063*(Tai+273.15)+0.00673
+  0.000063*(Tai+273.15)+0.00673
 }
 
 #' Diffusivity of water vapour in air
