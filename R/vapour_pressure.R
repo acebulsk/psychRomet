@@ -1,4 +1,5 @@
-#' Tetens' formula for saturated vapour pressure
+#' Tetens' formula for saturated vapour pressure. Calculates with respect to
+#' water if T_c > 0 or ice if T_c <= 0.
 #'
 #' Change e_o to 610.8 for pa. From Stull et al., 2017 eq. 4.2
 #'
@@ -11,8 +12,8 @@
 #' @export
 #'
 #' @examples tetens(30)
-tetens <- function(T_c, e_o = 0.6113, b1 = 17.27, b2 = 21.87){
-  dplyr::if_else(T_c >= 0,
+tetens <- function(T_c, e_o = 0.6113, b1 = 17.27, b2 = 21.88){
+  dplyr::if_else(T_c > 0,
                  e_o*exp((b1*T_c)/(T_c+237.3)), # true
                  e_o*exp((b2*T_c)/(T_c+265.5)) # false
   )
