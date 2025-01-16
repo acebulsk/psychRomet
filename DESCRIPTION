@@ -10,8 +10,13 @@ Encoding: UTF-8
 LazyData: true
 Imports:
     dplyr
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Suggests: 
     rmarkdown,
-    knitr
+    knitr,
+    kableExtra,
+    purrr,
+    dplyr,
+    tidyr,
+    ggplot2
 VignetteBuilder: knitr
